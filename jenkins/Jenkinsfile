@@ -8,15 +8,30 @@ pipeline {
   stages {
     stage('Checkout Code') {
       steps {
-        checkout scm  // Pulls the code from your Git repository
+        checkout scm
       }
     }
 
     stage('Install Terrace Copilot CLI') {
       steps {
         bat '''
-          mkdir %TERRACE_COPILOT_HOME%
-          curl -sSL https://terracecopilot.dev/install.sh | bash -s -- --install-dir %TERRACE_COPILOT_HOME%
+          echo Creating Terrace Copilot CLI directory...
+          mkdir "%TERRACE_COPILOT_HOME%"
+
+          echo Checking internet connectivity...
+          nslookup terracecopilot.dev
+
+          echo Attempting to download Terrace Copilot CLI...
+          curl -v -sSL https://terracecopilot.dev/install.sh -o install.sh
+
+          if exist install.sh (
+            bash install.sh --install-dir "%TERRACE_COPILOT_HOME%"
+            echo CLI Installed successfully.
+          ) else (
+            echo Failed to download Terrace Copilot CLI. Check network or DNS settings.
+            exit 1
+          )
+
           set PATH=%TERRACE_COPILOT_HOME%\\bin;%PATH%
         '''
       }
@@ -28,13 +43,18 @@ pipeline {
           set PATH=%TERRACE_COPILOT_HOME%\\bin;%PATH%
           mkdir terrace-review-output
 
+          echo Running Terrace Copilot review on inputs.conf...
           terracecopilot review configs\\inputs.conf --output terrace-review-output\\inputs_review.txt || echo No suggestions. > terrace-review-output\\inputs_review.txt
+
+          echo Running Terrace Copilot review on outputs.conf...
           terracecopilot review configs\\outputs.conf --output terrace-review-output\\outputs_review.txt || echo No suggestions. > terrace-review-output\\outputs_review.txt
 
-          echo Inputs.conf Suggestions:
+          echo.
+          echo === Inputs.conf Suggestions ===
           type terrace-review-output\\inputs_review.txt
 
-          echo Outputs.conf Suggestions:
+          echo.
+          echo === Outputs.conf Suggestions ===
           type terrace-review-output\\outputs_review.txt
         '''
       }
