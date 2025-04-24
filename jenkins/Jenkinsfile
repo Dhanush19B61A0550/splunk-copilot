@@ -1,0 +1,45 @@
+pipeline {
+  agent any
+
+  environment {
+    TERRACE_COPILOT_HOME = "${WORKSPACE}/terracecopilot"
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        checkout scm  // Pulls the code from your Git repository
+      }
+    }
+
+    stage('Install Terrace Copilot CLI') {
+      steps {
+        sh '''
+          mkdir -p $TERRACE_COPILOT_HOME
+          curl -sSL https://terracecopilot.dev/install.sh | bash -s -- --install-dir $TERRACE_COPILOT_HOME
+          export PATH=$TERRACE_COPILOT_HOME/bin:$PATH
+        '''
+      }
+    }
+
+    stage('Analyze Config Files') {
+      steps {
+        sh '''
+          export PATH=$TERRACE_COPILOT_HOME/bin:$PATH
+          mkdir -p terrace-review-output
+
+          terracecopilot review configs/inputs.conf --output terrace-review-output/inputs_review.txt || true
+          terracecopilot review configs/outputs.conf --output terrace-review-output/outputs_review.txt || true
+
+          echo "Inputs.conf Suggestions:"
+          cat terrace-review-output/inputs_review.txt || echo "No suggestions."
+
+          echo "Outputs.conf Suggestions:"
+          cat terrace-review-output/outputs_review.txt || echo "No suggestions."
+        '''
+      }
+    }
+  }
+}
+
+
