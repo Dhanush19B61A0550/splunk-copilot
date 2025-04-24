@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    TERRACE_COPILOT_HOME = "${WORKSPACE}/terracecopilot"
+    TERRACE_COPILOT_HOME = "${WORKSPACE}\\terracecopilot"
   }
 
   stages {
