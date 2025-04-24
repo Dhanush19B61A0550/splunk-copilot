@@ -14,32 +14,30 @@ pipeline {
 
     stage('Install Terrace Copilot CLI') {
       steps {
-        sh '''
-          mkdir -p $TERRACE_COPILOT_HOME
-          curl -sSL https://terracecopilot.dev/install.sh | bash -s -- --install-dir $TERRACE_COPILOT_HOME
-          export PATH=$TERRACE_COPILOT_HOME/bin:$PATH
+        bat '''
+          mkdir %TERRACE_COPILOT_HOME%
+          curl -sSL https://terracecopilot.dev/install.sh | bash -s -- --install-dir %TERRACE_COPILOT_HOME%
+          set PATH=%TERRACE_COPILOT_HOME%\\bin;%PATH%
         '''
       }
     }
 
     stage('Analyze Config Files') {
       steps {
-        sh '''
-          export PATH=$TERRACE_COPILOT_HOME/bin:$PATH
-          mkdir -p terrace-review-output
+        bat '''
+          set PATH=%TERRACE_COPILOT_HOME%\\bin;%PATH%
+          mkdir terrace-review-output
 
-          terracecopilot review configs/inputs.conf --output terrace-review-output/inputs_review.txt || true
-          terracecopilot review configs/outputs.conf --output terrace-review-output/outputs_review.txt || true
+          terracecopilot review configs\\inputs.conf --output terrace-review-output\\inputs_review.txt || echo No suggestions. > terrace-review-output\\inputs_review.txt
+          terracecopilot review configs\\outputs.conf --output terrace-review-output\\outputs_review.txt || echo No suggestions. > terrace-review-output\\outputs_review.txt
 
-          echo "Inputs.conf Suggestions:"
-          cat terrace-review-output/inputs_review.txt || echo "No suggestions."
+          echo Inputs.conf Suggestions:
+          type terrace-review-output\\inputs_review.txt
 
-          echo "Outputs.conf Suggestions:"
-          cat terrace-review-output/outputs_review.txt || echo "No suggestions."
+          echo Outputs.conf Suggestions:
+          type terrace-review-output\\outputs_review.txt
         '''
       }
     }
   }
 }
-
-
