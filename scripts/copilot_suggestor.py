@@ -1,12 +1,13 @@
 import os
 import requests
 
-# Replace with your Terrace Copilot API URL if it's different
 # OpenAI API URL
 API_URL = "https://api.openai.com/v1/completions"
 
-# Insert your OpenAI API key here (BE CAREFUL with hardcoding keys in production)
-API_KEY = "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"
+# Read OpenAI API key from environment variable
+API_KEY = os.getenv("OPENAI_API_KEY")
+if not API_KEY:
+    raise ValueError("Missing OPENAI_API_KEY in environment.")
 
 def read_file(file_path):
     """Reads content from a file."""
@@ -39,20 +40,24 @@ def ask_openai(file_name, content):
         print(f"Error: {response.status_code}, {response.text}")
         return content
 
-# List of configuration files you want to improve
-files = ['inputs.conf', 'outputs.conf']
-changes_made = False
+def main():
+    # List of configuration files you want to improve
+    files = ['inputs.conf', 'outputs.conf']
+    changes_made = False
 
-for file in files:
-    content = read_file(file)
-    improved_content = ask_openai(file, content)
-    
-    # Check if changes are suggested and update the file
-    if improved_content.strip() != content.strip():
-        write_file(file, improved_content)
-        changes_made = True
+    for file in files:
+        content = read_file(file)
+        improved_content = ask_openai(file, content)
 
-# Log changes if any were made
-if changes_made:
-    with open('changes_detected.txt', 'w') as f:
-        f.write("Changes made to config files.\n")
+        # Check if changes are suggested and update the file
+        if improved_content.strip() != content.strip():
+            write_file(file, improved_content)
+            changes_made = True
+
+    # Log changes if any were made
+    if changes_made:
+        with open('changes_detected.txt', 'w') as f:
+            f.write("Changes made to config files.\n")
+
+if __name__ == "__main__":
+    main()
